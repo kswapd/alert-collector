@@ -6,9 +6,7 @@ Generate slack token: https://api.slack.com/web
 
 import (
 	"fmt"
-	//"net/url"
 	"os"
-	//"github.com/fatih/color"
 	"net/http"
 	"net"
 	"time"
