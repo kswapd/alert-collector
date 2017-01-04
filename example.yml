@@ -1,4 +1,4 @@
-- name: Min Foo
+- name: container-cpu
   type: influxdb
   function: min
   limit: 10
@@ -9,7 +9,7 @@
     operator: gt
     value: 8 
   notifiers:
-    - slack
+    - alert-server
     - foobar
 - name: Max Foo
   type: influxdb

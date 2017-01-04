@@ -18,10 +18,7 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/bluele/slack"
-	flag "github.com/ogier/pflag"
-	"github.com/tbruyelle/hipchat-go/hipchat"
+	"flag"
 	yaml "gopkg.in/yaml.v2"
 	"net/http"
 )
@@ -65,14 +62,17 @@ var (
 
 
 func main() {
-	var file *string = flag.StringP("config", "c", "", "Config file to use")
-	flag.Parse()
+	//var file *string = flag.StringP("config", "c", "", "Config file to use")
 
+	var alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
+	var influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
+	flag.Parse()
+	fmt.Printf("alert file:%s, influx address:%s\n", *alertFile, *influxAddr)
 	setupInflux()
 
 	alerts := []Alert{}
 
-	data, _ := ioutil.ReadFile(*file)
+	data, _ := ioutil.ReadFile(*alertFile)
 	err := yaml.Unmarshal(data, &alerts)
 	if err != nil {
 		panic(err)

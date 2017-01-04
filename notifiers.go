@@ -6,19 +6,16 @@ Generate slack token: https://api.slack.com/web
 
 import (
 	"fmt"
-	"net/url"
+	//"net/url"
 	"os"
-	pagerduty "github.com/PagerDuty/go-pagerduty"
-	"github.com/bluele/slack"
-	"github.com/fatih/color"
-	"github.com/tbruyelle/hipchat-go/hipchat"
+	//"github.com/fatih/color"
 	"net/http"
 	"net"
 	"time"
-	"encoding/json"
-	"log"
-	"bytes"
-	"io/ioutil"
+	//"encoding/json"
+	//"log"
+	//"bytes"
+	//"io/ioutil"
 )
 
 type ParamJson struct {
@@ -49,7 +46,7 @@ type AlertData struct {
 	AlertData []AlertInfoJson `json:"alert_data"`
 }
 
-func (this *Notifier) sendAlert(alertData AlertData) {
+/*func (this *Notifier) sendAlert(alertData AlertData) {
 	sendBody, errParse := json.Marshal(alertData)
 	if errParse != nil {
 		log.Fatalln("Parse the alertdata error..")
@@ -71,6 +68,10 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 	}
 	fmt.Println("the data is %v", string(data))
 	defer resp.Body.Close()
+}*/
+
+func (this *Notifier) Run(msg string, isNotifier bool){
+	fmt.Println("the alert msg run is %s", msg)
 }
 
 func setupHttpClient() {
