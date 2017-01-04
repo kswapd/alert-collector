@@ -2,7 +2,7 @@
   type: influxdb
   function: min
   limit: 10
-  query: select * from "foo.counter"
+  query: select * from "container_cpu_usage_seconds_total"
   interval: 5
   timeshift: 1h
   trigger:

@@ -48,7 +48,8 @@ func query(query string) []float64 {
 		if row[1] == nil {
 			continue
 		}
-		val, _ := row[1].(json.Number).Float64()
+		//fmt.Println(row)
+		val, _ := row[6].(json.Number).Float64()
 		ret = append(ret, val)
 		if os.Getenv("DEBUG") == "true" {
 			log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
