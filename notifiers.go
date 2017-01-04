@@ -8,104 +8,93 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-
 	pagerduty "github.com/PagerDuty/go-pagerduty"
 	"github.com/bluele/slack"
 	"github.com/fatih/color"
 	"github.com/tbruyelle/hipchat-go/hipchat"
+	"net/http"
+	"net"
+	"time"
+	"encoding/json"
+	"log"
+	"bytes"
+	"io/ioutil"
 )
 
-func (n *Notifier) Run(message string, isAlert bool) {
-	switch n.Name {
-	case "slack":
-		if slack_api == nil {
-			color.Red("[!] Slack used as a notifier, but not configured with ENV vars.")
-			return
-		}
-		if isAlert {
-			err = slack_api.ChatPostMessage(slack_channel.Id, message, &slack.ChatPostMessageOpt{IconEmoji: ":fire:"})
-		} else {
-			err = slack_api.ChatPostMessage(slack_channel.Id, message, &slack.ChatPostMessageOpt{IconEmoji: ":success:"})
-		}
-		if err != nil {
-			color.Red(fmt.Sprintf("[!] Error posting to Slack: %s", err))
-		}
-	case "pagerduty":
-		if pagerduty_api_token == "" || pagerduty_service_key == "" {
-			color.Red("[!] PagerDuty used as a notifier, but not configured with ENV vars.")
-		}
-
-		if isAlert {
-			event := pagerduty.Event{
-				Type:        "trigger",
-				ServiceKey:  pagerduty_service_key,
-				Description: message,
-			}
-			resp, err := pagerduty.CreateEvent(event)
-			if err != nil {
-				fmt.Println(resp)
-				color.Red(fmt.Sprintf("[!] Error posting to PagerDuty: %s", err))
-			}
-		} else {
-			color.Green("[>] PagerDuty incident should be resolved now.")
-		}
-
-	case "hipchat":
-		if hipchat_api == nil {
-			color.Red("[!] HipChat used as a notifier, but not configured with ENV vars.")
-			return
-		}
-		if isAlert {
-			_, err = hipchat_api.Room.Notification(os.Getenv("HIPCHAT_ROOM_ID"), &hipchat.NotificationRequest{Message: message, Color: "red"})
-		} else {
-			_, err = hipchat_api.Room.Notification(os.Getenv("HIPCHAT_ROOM_ID"), &hipchat.NotificationRequest{Message: message, Color: "green"})
-		}
-		if err != nil {
-			color.Red(fmt.Sprintf("[!] Error posting to HipChat: %s", err))
-		}
-	case n.Name: // default
-		color.Yellow(fmt.Sprintf("[>] Unknown notifier: %s", n.Name))
-	}
-
+type ParamJson struct {
+	PKey   string `json:"p_key"`
+	PValue string `json:"p_value"`
 }
 
-func setupPagerduty() {
-	if len(os.Getenv("PAGERDUTY_API_TOKEN")) == 0 ||
-		len(os.Getenv("PAGERDUTY_SERVICE_KEY")) == 0 {
-		color.Yellow("[>] Skipping Pagerduty setup, missing PAGERDUTY_API_TOKEN and PAGERDUTY_SERVICE_KEY")
-		return
-	}
-
-	pagerduty_api_token = os.Getenv("PAGERDUTY_API_TOKEN")
-	pagerduty_service_key = os.Getenv("PAGERDUTY_SERVICE_KEY")
+type AlertInfoJson struct {
+	Status        string `json:"status"`
+	AlertType     string `json:"alert_type"` //M-监控 L-日志
+	AlertDim      string `json:"alert_dim"`  //C-容器 A-应用
+	AppType       string `json:"app_type"`
+	Msg           string `json:"msg"`
+	EnvironmentId string `json:"environment_id"`
+	ContainerUuid string `json:"container_uuid"`
+	ContainerName string `json:"container_name"`
+	StartTime     string `json:"start_time"`
+	EndTime       string `json:"end_time"`
+	Namespace     string `json:"namespace"`
+	Data          []ParamJson `json:"data"`
 }
 
-func setupSlack() {
-	if len(os.Getenv("SLACK_API_TOKEN")) == 0 ||
-		len(os.Getenv("SLACK_ROOM")) == 0 {
-		color.Yellow("[>] Skipping Slack setup, missing SLACK_API_TOKEN and SLACK_ROOM")
+const method = "POST"
+
+var alertUrl = ""
+
+type AlertData struct {
+	AlertData []AlertInfoJson `json:"alert_data"`
+}
+
+func (this *Notifier) sendAlert(alertData AlertData) {
+	sendBody, errParse := json.Marshal(alertData)
+	if errParse != nil {
+		log.Fatalln("Parse the alertdata error..")
 		return
 	}
-	slack_api = slack.New(os.Getenv("SLACK_API_TOKEN"))
-
-	slack_channel, err = slack_api.FindChannelByName(os.Getenv("SLACK_ROOM"))
+	req, err := http.NewRequest(method, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("the data is %v", string(data))
+	defer resp.Body.Close()
+}
+
+func setupHttpClient() {
+	alertUrl = getEnv("ALERT_URL", "http://54.223.149.108:8077/alert/v1/info/receive")
+	httpClient = http.Client{
+		Transport: &http.Transport{
+			Dial: func(netw, addr string) (net.Conn, error) {
+				deadline := time.Now().Add(25 * time.Second)
+				c, err := net.DialTimeout(netw, addr, time.Second * 20)
+				if err != nil {
+					return nil, err
+				}
+				c.SetDeadline(deadline)
+				return c, nil
+			},
+		},
 	}
 }
 
-func setupHipchat() {
-	hipchat_api = hipchat.NewClient(os.Getenv("HIPCHAT_API_TOKEN"))
-	if len(os.Getenv("HIPCHAT_API_TOKEN")) == 0 ||
-		len(os.Getenv("HIPCHAT_ROOM_ID")) == 0 {
-		color.Yellow("[>] Skipping Hipchat setup, missing HIPCHAT_API_TOKEN and HIPCHAT_ROOM_ID")
-		return
+func getEnv(key string, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
 	}
-	if os.Getenv("HIPCHAT_SERVER") != "" {
-		hipchat_api.BaseURL, err = url.Parse(os.Getenv("HIPCHAT_SERVER"))
-		if err != nil {
-			color.Red("Error connecting to private hipchat server: ", err)
-			panic(err)
-		}
-	}
+	return value
 }
+

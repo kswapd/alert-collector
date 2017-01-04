@@ -55,17 +55,11 @@ type Alert struct {
 	Notifiers    []Notifier `yaml:"-"`
 }
 
-var err error
-var slack_api *slack.Slack
-var slack_channel *slack.Channel
-var hipchat_api *hipchat.Client
 var httpClient http.Client
 
 var (
 	tMutex                sync.Mutex
 	triggeredAlerts       = map[string]TriggeredAlert{}
-	pagerduty_api_token   string
-	pagerduty_service_key string
 )
 
 
@@ -87,9 +81,7 @@ func main() {
 		fmt.Printf("%+v\n", alerts)
 	}
 
-	setupSlack()
-	setupHipchat()
-	setupPagerduty()
+	setupHttpClient()
 
 	done := make(chan bool)
 	for _, alert := range alerts {
