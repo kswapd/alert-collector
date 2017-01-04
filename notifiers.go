@@ -6,12 +6,7 @@ Generate slack token: https://api.slack.com/web
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	pagerduty "github.com/PagerDuty/go-pagerduty"
-	"github.com/bluele/slack"
-	"github.com/fatih/color"
-	"github.com/tbruyelle/hipchat-go/hipchat"
 	"net/http"
 	"net"
 	"time"
