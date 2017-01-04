@@ -63,6 +63,7 @@ var (
 )
 
 
+
 func main() {
 	var file *string = flag.StringP("config", "c", "", "Config file to use")
 	flag.Parse()
