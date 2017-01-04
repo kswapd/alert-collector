@@ -23,6 +23,7 @@ import (
 	flag "github.com/ogier/pflag"
 	"github.com/tbruyelle/hipchat-go/hipchat"
 	yaml "gopkg.in/yaml.v2"
+	"net/http"
 )
 
 type Trigger struct {
@@ -58,6 +59,7 @@ var err error
 var slack_api *slack.Slack
 var slack_channel *slack.Channel
 var hipchat_api *hipchat.Client
+var httpClient http.Client
 
 var (
 	tMutex                sync.Mutex
@@ -65,6 +67,7 @@ var (
 	pagerduty_api_token   string
 	pagerduty_service_key string
 )
+
 
 func main() {
 	var file *string = flag.StringP("config", "c", "", "Config file to use")
