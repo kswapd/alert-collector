@@ -59,13 +59,15 @@ var (
 	triggeredAlerts       = map[string]TriggeredAlert{}
 )
 
-
+var (
+	
+	alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
+	influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
+)
 
 func main() {
 	//var file *string = flag.StringP("config", "c", "", "Config file to use")
 
-	var alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
-	var influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
 	flag.Parse()
 	fmt.Printf("alert file:%s, influx address:%s\n", *alertFile, *influxAddr)
 	setupInflux()

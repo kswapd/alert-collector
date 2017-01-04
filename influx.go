@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strconv"
+	//"strconv"
 	"time"
 
 	"github.com/influxdata/influxdb/client"
@@ -15,7 +15,7 @@ import (
 func queryDB(cmd string) (res []client.Result, err error) {
 	q := client.Query{
 		Command:  cmd,
-		Database: os.Getenv("INFLUX_DB"),
+		Database: "containerdb",//os.Getenv("INFLUX_DB"),
 	}
 	if response, err := con.Query(q); err == nil {
 		if response.Error() != nil {
@@ -60,9 +60,9 @@ func query(query string) []float64 {
 var con *client.Client
 
 func setupInflux() {
-	influx_port, _ := strconv.ParseInt(os.Getenv("INFLUX_PORT"), 10, 0)
+	//influx_port, _ := strconv.ParseInt(os.Getenv("INFLUX_PORT"), 10, 0)
 
-	u, err := url.Parse(fmt.Sprintf("http://%s:%d", os.Getenv("INFLUX_HOST"), influx_port))
+	u, err := url.Parse(fmt.Sprintf("http://%s", *influxAddr))
 	if err != nil {
 		log.Fatal(err)
 	}
