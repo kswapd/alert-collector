@@ -70,6 +70,7 @@ func (alert *Alert) Run() {
 	case "lt":
 		alert_triggered = applied_function < float64(alert.Trigger.Value)
 	}
+	
 
 	if alert_triggered {
 		message := fmt.Sprintf("*[!] %s triggered!* Value: %.2f | Trigger: %s %d",
