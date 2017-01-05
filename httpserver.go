@@ -100,6 +100,7 @@ func getRules() {
 		_alert.Type = "influxdb"
 		_alert.Trigger.Operator = conMetrics.Condition
 		_alert.Trigger.Value = conMetrics.Value
+		_alert.NotifiersRaw = []string{"sendAlert"}
 		alertRule = append(alertRule, _alert)
 	}
 	for _, appJson := range ruleJson.App {
@@ -126,6 +127,7 @@ func getRules() {
 			_appAlert.Type = "influxdb"
 			_appAlert.Trigger.Operator = appMetrics.Condition
 			_appAlert.Trigger.Value = appMetrics.Value
+			_appAlert.NotifiersRaw = []string{"sendAlert"}
 			alertRule = append(alertRule, _appAlert)
 		}
 	}

@@ -110,7 +110,7 @@ func (alert *Alert) Run() {
 				/*for _, n := range alert.Notifiers {
 					n.Run(message, true)
 				}*/
-				sendAlert()
+				//sendAlert()
 			}
 
 		} else {
