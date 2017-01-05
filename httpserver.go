@@ -21,7 +21,7 @@ const nginx_accept = `select difference(value)/elapsed(value) from "container_cp
 
 var (
 	listenPort, _ = strconv.Atoi(getEnv("LISTEN_PORT", "8011"))
-	ruleUrl = getEnv("RULE_URL", "http://cloudos.hnaresearch.com/alert/v1/rule")
+	ruleUrl = getEnv("RULE_URL", "http://54.222.160.114:8082/alert/v1/rule")
 )
 
 type MetricsJson struct {

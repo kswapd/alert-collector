@@ -124,7 +124,7 @@ func (alert *Alert) Run() {
 				alert.AlertDim  = "C"
 				alert.AppType   = "container"
 				alert.Msg    = "alerted"
-				alert.EnvironmentId = "123"
+				alert.EnvironmentId = "8925"
 				alert.ContainerUuid  = uuid
 				alert.ContainerName = "containername123"
 				alert.StartTime  =  info.AlertStartTime
@@ -148,7 +148,7 @@ func (alert *Alert) Run() {
 				color.Green("[+] %s - Alert resolved.", alert.Name)
 			}
 			tMutex.Unlock()
-			color.Green(fmt.Sprintf("[+] %s--%s passed. (%.2f)", alert.Name,uuid, info.TargetValue))
+			//color.Green(fmt.Sprintf("[+] %s--%s passed. (%.2f)", alert.Name,uuid, info.TargetValue))
 		}
 
 
