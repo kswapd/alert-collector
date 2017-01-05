@@ -25,6 +25,56 @@ func queryDB(cmd string) (res []client.Result, err error) {
 	return
 }
 
+
+
+func indexOf(strs []string, dst string) int {
+	for k, v := range strs {
+		if v == dst {
+			return k
+		}
+	}
+	return -1 //未找到dst，返回-1
+}
+func queryTags(query string, alertId string) map[string] *sContainerAlert {
+	
+	res, err := queryDB(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(res) < 1 {
+		return nil
+	}
+
+	if len(res[0].Series) < 1 {
+		return nil
+	}
+
+
+
+		//timeInd:= indexOf(ret[0].Series[0].Columns, "time")
+		uuidInd := indexOf(res[0].Series[0].Columns, "container_uuid")
+		envIdInd := indexOf(res[0].Series[0].Columns, "environment_id")
+		nameInd := indexOf(res[0].Series[0].Columns, "container_name")
+		namespaceInd := indexOf(res[0].Series[0].Columns, "namespace")
+		typeInd := indexOf(res[0].Series[0].Columns, "type")
+
+		//containerMonitorTag.Timestamp = fmt.Sprintf("%s", ret[0].Series[0].Values[0][timeInd])
+		Container_uuid := fmt.Sprintf("%s", res[0].Series[0].Values[0][uuidInd])
+		Environment_id := fmt.Sprintf("%s", res[0].Series[0].Values[0][envIdInd])
+		Container_name := fmt.Sprintf("%s", res[0].Series[0].Values[0][nameInd])
+		Namespace := fmt.Sprintf("%s", res[0].Series[0].Values[0][namespaceInd])
+		Type := fmt.Sprintf("%s", res[0].Series[0].Values[0][typeInd])
+
+
+		containerStatsInfo[alertId][Container_uuid].EnvironmentId = Environment_id
+		containerStatsInfo[alertId][Container_uuid].ContainerName = Container_name
+		containerStatsInfo[alertId][Container_uuid].Namespace = Namespace
+		containerStatsInfo[alertId][Container_uuid].Type = Type
+
+	return containerStatsInfo[alertId]
+}
+
+
 func query(query string, alertId string) map[string] *sContainerAlert {
 	ret := []float64{}
 

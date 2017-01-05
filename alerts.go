@@ -115,8 +115,9 @@ func (alert *Alert) Run() {
 				/*for _, n := range alert.Notifiers {
 					n.Run(message, true)
 				}*/
+				tagQuery := fmt.Sprintf("select * from container_cpu_usage_seconds_total where container_uuid='%s' order by time desc limit 1", uuid)
+				 queryTags(tagQuery, alert.Name)
 
-			
 
 				var param ParamJson
 				param.PKey = "cpu"
@@ -129,12 +130,12 @@ func (alert *Alert) Run() {
 				alert.AlertDim  = "C"
 				alert.AppType   = "container"
 				alert.Msg    = "alerted"
-				alert.EnvironmentId = "8925"
+				alert.EnvironmentId = info.EnvironmentId
 				alert.ContainerUuid  = uuid
-				alert.ContainerName = "containername123"
+				alert.ContainerName =  info.ContainerName
 				alert.StartTime  =  info.AlertStartTime
 				alert.EndTime   = info.AlertStartTime
-				alert.Namespace  = "namespace123"
+				alert.Namespace  = info.Namespace
 				alert.Data = append(alert.Data, param)
 				allAlert.AlertInfo = append(allAlert.AlertInfo, alert)
 
