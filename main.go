@@ -62,6 +62,7 @@ var (
 var (
 	alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
 	influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
+	containerStatsInfo = make(map[string] *sContainerAlert)
 )
 
 func main() {

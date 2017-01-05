@@ -41,7 +41,7 @@ const METHOD_POST = "POST"
 var alertUrl = ""
 
 type AlertData struct {
-	AlertData []AlertInfoJson `json:"alert_data"`
+	alertData []AlertInfoJson `json:"alert_data"`
 }
 
 func (this *Notifier) sendAlert(alertData AlertData) {

@@ -6,33 +6,42 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"time"
+	//"time"
 
 	"github.com/fatih/color"
 )
 
-func (alert *Alert) ApplyFunction(values []float64) float64 {
+func (alert *Alert) ApplyFunction(orginValue map[string] *sContainerAlert) map[string] *sContainerAlert {
 	var appliedFunction float64
 
-	if len(values) > 0 {
-		appliedFunction = values[0]
-	}
+	for _, info := range orginValue {
 
-	if alert.Function == "average" {
-		for _, i := range values {
-			appliedFunction += float64(i)
+		if len(info.Stats) > 0 {
+			appliedFunction = info.Stats[0].value
 		}
-		appliedFunction = appliedFunction / float64(len(values))
-	} else if alert.Function == "max" {
-		for _, i := range values {
-			appliedFunction = math.Max(appliedFunction, i)
-		}
-	} else if alert.Function == "min" {
-		for _, i := range values {
-			appliedFunction = math.Min(appliedFunction, i)
+
+		if alert.Function == "average" {
+			for _, s := range info.Stats {
+				appliedFunction += float64(s.value)
+			}
+			appliedFunction = appliedFunction / float64(len(info.Stats))
+			info.AvgValue = appliedFunction
+			info.TargetValue = appliedFunction
+		} else if alert.Function == "max" {
+			for _, s := range info.Stats {
+				appliedFunction = math.Max(appliedFunction, s.value)
+				info.MaxValue = appliedFunction
+				info.TargetValue = appliedFunction
+			}
+		} else if alert.Function == "min" {
+			for _, s := range info.Stats {
+				appliedFunction = math.Min(appliedFunction, s.value)
+				info.MinValue = appliedFunction
+				info.TargetValue = appliedFunction
+			}
 		}
 	}
-	return appliedFunction
+	return orginValue
 }
 
 func (alert *Alert) Setup() {
@@ -51,59 +60,76 @@ func (alert *Alert) Run() {
 
 	groupByQuery := ""
 	if len(alert.GroupBy) > 0 {
-		groupByQuery = fmt.Sprintf("GROUP BY time(%s)", alert.GroupBy)
+		groupByQuery = fmt.Sprintf("GROUP BY %s", alert.GroupBy)
 	}
+	finalQuery := fmt.Sprintf("%s where time > now() - %s %s limit %d",
+		alert.Query, alert.Timeshift, groupByQuery, alert.Limit)
 
-	values := query(fmt.Sprintf("%s where time > now() - %s %s limit %d",
-		alert.Query, alert.Timeshift, groupByQuery, alert.Limit))
+	fmt.Println(finalQuery)
+	infos := query(finalQuery)
 
-	applied_function := alert.ApplyFunction(values)
+	infos = alert.ApplyFunction(infos)
 
 	if os.Getenv("DEBUG") == "true" {
-		fmt.Println("Applied Func: ", applied_function)
+		fmt.Println("Applied Func: ", infos)
 	}
 
-	alert_triggered := false
-	switch alert.Trigger.Operator {
-	case "gt":
-		alert_triggered = applied_function > float64(alert.Trigger.Value)
-	case "lt":
-		alert_triggered = applied_function < float64(alert.Trigger.Value)
-	}
-	
 
-	if alert_triggered {
-		message := fmt.Sprintf("*[!] %s triggered!* Value: %.2f | Trigger: %s %d",
-			alert.Name, applied_function, alert.Trigger.Operator, alert.Trigger.Value)
-		color.Red(message)
-		alertAlreadyTriggered := false
-		tMutex.Lock()
-		if v, ok := triggeredAlerts[alert.Hash]; ok {
-			color.Yellow(fmt.Sprintf("[already triggered at %s] %s", v.TriggeredAt, message))
-			alertAlreadyTriggered = true
+
+	for uuid, info := range infos {
+
+
+		alert_triggered := false
+		switch alert.Trigger.Operator {
+		case "GT":
+			alert_triggered = info.TargetValue > float64(alert.Trigger.Value)
+		case "LT":
+			alert_triggered = info.TargetValue < float64(alert.Trigger.Value)
+		case "GTE":
+			alert_triggered = info.TargetValue >= float64(alert.Trigger.Value)
+		case "LTE":
+			alert_triggered = info.TargetValue <= float64(alert.Trigger.Value)
+		}
+		
+
+		if alert_triggered {
+			message := fmt.Sprintf("*[!] %s--%s triggered!* Value: %.2f | Trigger: %s %.2f",
+				alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
+			color.Red(message)
+			alertAlreadyTriggered := false
+			tMutex.Lock()
+			if info.TriggeredAlerts {
+				color.Yellow(fmt.Sprintf("[already triggered at %s] %s", info.AlertStartTime, uuid))
+				alertAlreadyTriggered = true
+			} else {
+				info.TriggeredAlerts = true
+				info.AlertStartTime = info.Timestamp
+			}
+			tMutex.Unlock()
+			if !alertAlreadyTriggered {
+				/*for _, n := range alert.Notifiers {
+					n.Run(message, true)
+				}*/
+				sendAlert()
+			}
+
 		} else {
-			triggeredAlerts[alert.Hash] = TriggeredAlert{Hash: alert.Hash, TriggeredAt: time.Now()}
-		}
-		tMutex.Unlock()
-		if !alertAlreadyTriggered {
-			for _, n := range alert.Notifiers {
-				n.Run(message, true)
+			tMutex.Lock()
+			if info.TriggeredAlerts {
+				info.TriggeredAlerts = false
+				message := fmt.Sprintf("*[+] %s--%s resolved * Value: %.2f | Trigger: %s %.2f",
+					alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
+				/*for _, n := range alert.Notifiers {
+					n.Run(message, false)
+				}*/
+				color.Green("[+] %s - Alert resolved.", alert.Name)
 			}
+			tMutex.Unlock()
+			color.Green(fmt.Sprintf("[+] %s--%s passed. (%.2f)", alert.Name,uuid, info.TargetValue))
 		}
 
-	} else {
-		tMutex.Lock()
-		if _, ok := triggeredAlerts[alert.Hash]; ok {
-			delete(triggeredAlerts, alert.Hash)
-			message := fmt.Sprintf("*[+] %s resolved * Value: %.2f | Trigger: %s %d",
-				alert.Name, applied_function, alert.Trigger.Operator, alert.Trigger.Value)
-			for _, n := range alert.Notifiers {
-				n.Run(message, false)
-			}
-			color.Green("[+] %s - Alert resolved.", alert.Name)
-		}
-		tMutex.Unlock()
-		color.Green(fmt.Sprintf("[+] %s passed. (%.2f)", alert.Name, applied_function))
+
 	}
+
 
 }

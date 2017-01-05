@@ -1,13 +1,20 @@
 - name: container-cpu
   type: influxdb
-  function: min
+  function: max
   limit: 10
-  query: select * from "container_cpu_usage_seconds_total"
+  #query: select * from "container_cpu_usage_seconds_total"
+  #select derivative(value,1s)/1000000000  from "container_cpu_usage_seconds_total" where "container_uuid"='e7b05952-a5ba-4e98-9ede-2e2d7a7153a4' order by time desc limit 10
+  #select difference(value)/elapsed("value")  from "container_cpu_usage_seconds_total"  order by time desc limit 10
+  #select derivative(value,1s)/1000000000  from container_cpu_usage_seconds_total  group by "container_uuid" order by time desc limit 10
+  #select difference(value)/elapsed(value)  from container_cpu_usage_seconds_total  group by "container_uuid" limit 10
+  #select max(difference(value)/elapsed(value))  from container_cpu_usage_seconds_total  group by "container_uuid" limit 10
+  query: select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"
+  group_by: container_uuid
   interval: 5
-  timeshift: 1h
+  timeshift: 30m
   trigger:
     operator: gt
-    value: 8 
+    value: 0.02
   notifiers:
     - alert-server
     - foobar

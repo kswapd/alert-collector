@@ -8,7 +8,6 @@ import (
 	"os"
 	//"strconv"
 	"time"
-
 	"github.com/influxdata/influxdb/client"
 )
 
@@ -26,36 +25,76 @@ func queryDB(cmd string) (res []client.Result, err error) {
 	return
 }
 
-func query(query string) []float64 {
+func query(query string) map[string] *sContainerAlert {
 	ret := []float64{}
+
+	//containerInfo := 
+	
+	_= containerStatsInfo
 	res, err := queryDB(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if len(res) < 1 {
-		return ret
+		return nil
 	}
 
 	if len(res[0].Series) < 1 {
-		return ret
+		return nil
 	}
 
-	for i, row := range res[0].Series[0].Values {
-		t, err := time.Parse(time.RFC3339, row[0].(string))
-		if err != nil {
-			log.Fatal(err)
+	//fmt.Printf("%#v.\n",res[0]);
+
+	for index := 0; index < len(res[0].Series); index++ {
+		se := res[0].Series[index]
+
+//se.tags.container_uuid
+
+
+		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; !ok {
+
+			containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
+			containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = false
+
 		}
-		if row[1] == nil {
-			continue
+		containerStatsInfo[se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
+		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-cpu"
+		for i, row := range se.Values {
+			t, err := time.Parse(time.RFC3339, row[0].(string))
+			if err != nil {
+				log.Fatal(err)
+			}
+			if row[1] == nil {
+				continue
+			}
+			//fmt.Println(row)
+			val, _ := row[1].(json.Number).Float64()
+			ret = append(ret, val)
+
+
+			/*if(se.Values[valIndex][2] == nil){			//todo , remove hard code.
+				continue
+			}*/
+			timeStr := fmt.Sprintf("%s", row[0])
+			valStr,err := row[1].(json.Number).Float64()
+			var sinfo sStatsInfo
+			sinfo.value = valStr
+			sinfo.timestamp = timeStr
+
+			containerStatsInfo[se.Tags["container_uuid"]].Stats = append(containerStatsInfo[se.Tags["container_uuid"]].Stats, sinfo)
+			//containerStatsInfo[se.Name].Stats[i].value = valStr
+			//containerStatsInfo[se.Name].Stats[i].timestamp = timeStr
+			containerStatsInfo[se.Tags["container_uuid"]].Timestamp = timeStr
+			if os.Getenv("DEBUG") == "true" {
+				log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
+			}
 		}
-		//fmt.Println(row)
-		val, _ := row[6].(json.Number).Float64()
-		ret = append(ret, val)
-		if os.Getenv("DEBUG") == "true" {
-			log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
-		}
+
+		//fmt.Printf("%#v.\n",containerStatsInfo[se.Tags["container_uuid"]]);
 	}
-	return ret
+	
+	//fmt.Printf("%#v.\n",containerStatsInfo);
+	return containerStatsInfo
 }
 
 var con *client.Client
