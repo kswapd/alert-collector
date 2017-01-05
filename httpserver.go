@@ -129,7 +129,6 @@ func getRules() {
 			alertRule = append(alertRule, _appAlert)
 		}
 	}
-	fmt.Println("the rule is %+v\n", alertRule)
 }
 
 
