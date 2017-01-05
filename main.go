@@ -14,12 +14,12 @@ Environment Variables:
 
 import (
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 	"sync"
 	"time"
 	"flag"
-	yaml "gopkg.in/yaml.v2"
+	//yaml "gopkg.in/yaml.v2"
 	"net/http"
 )
 
@@ -74,11 +74,11 @@ func main() {
 
 	alerts := []Alert{}
 
-	data, _ := ioutil.ReadFile(*alertFile)
-	err := yaml.Unmarshal(data, &alerts)
-	if err != nil {
+	//data, _ := ioutil.ReadFile(*alertFile)
+	//err := yaml.Unmarshal(data, &alerts)
+	/*if err != nil {
 		panic(err)
-	}
+	}*/
 
 	if os.Getenv("DEBUG") == "true" {
 		fmt.Printf("%+v\n", alerts)
@@ -88,7 +88,7 @@ func main() {
 	getRules()
 
 	done := make(chan bool)
-	for _, alert := range alerts {
+	for _, alert := range alertRule {
 		go func(alert Alert) {
 			alert.Setup()
 			for {

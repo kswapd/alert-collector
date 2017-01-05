@@ -74,7 +74,7 @@ func (alert *Alert) Run() {
 		fmt.Println("Applied Func: ", infos)
 	}
 
-
+	var allAlert AlertData
 
 	for uuid, info := range infos {
 
@@ -110,6 +110,29 @@ func (alert *Alert) Run() {
 				/*for _, n := range alert.Notifiers {
 					n.Run(message, true)
 				}*/
+
+			
+
+				var param ParamJson
+				param.PKey = "cpu"
+				param.PValue = fmt.Sprintf("%.2f",info.TargetValue)
+				
+
+				var alert AlertInfoJson 
+				alert.Status  = "alert" 
+				alert.AlertType  = "M"
+				alert.AlertDim  = "C"
+				alert.AppType   = "container"
+				alert.Msg    = "alerted"
+				alert.EnvironmentId = "123"
+				alert.ContainerUuid  = uuid
+				alert.ContainerName = "containername123"
+				alert.StartTime  =  info.AlertStartTime
+				alert.EndTime   = info.AlertStartTime
+				alert.Namespace  = "namespace123"
+				alert.Data = append(alert.Data, param)
+				allAlert.alertData = append(allAlert.alertData, alert)
+
 				//sendAlert()
 			}
 
@@ -117,8 +140,8 @@ func (alert *Alert) Run() {
 			tMutex.Lock()
 			if info.TriggeredAlerts {
 				info.TriggeredAlerts = false
-				message := fmt.Sprintf("*[+] %s--%s resolved * Value: %.2f | Trigger: %s %.2f",
-					alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
+				//message := fmt.Sprintf("*[+] %s--%s resolved * Value: %.2f | Trigger: %s %.2f",
+					//alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
 				/*for _, n := range alert.Notifiers {
 					n.Run(message, false)
 				}*/
@@ -130,6 +153,13 @@ func (alert *Alert) Run() {
 
 
 	}
+
+	if len(allAlert.alertData) > 0 {
+		for _, n := range alert.Notifiers {
+						n.sendAlert(allAlert)
+		}
+	}
+
 
 
 }
