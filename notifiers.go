@@ -64,7 +64,7 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 	if err != nil {
 		log.Fatalln("read response body error", err)
 	}
-	fmt.Println("the data is %v", string(data))
+	fmt.Printf("the data is %s.\n", string(data))
 	defer resp.Body.Close()
 }
 

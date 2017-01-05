@@ -25,12 +25,12 @@ func queryDB(cmd string) (res []client.Result, err error) {
 	return
 }
 
-func query(query string) map[string] *sContainerAlert {
+func query(query string, alertId string) map[string] *sContainerAlert {
 	ret := []float64{}
 
 	//containerInfo := 
 	
-	_= containerStatsInfo
+	
 	res, err := queryDB(query)
 	if err != nil {
 		log.Fatal(err)
@@ -44,21 +44,21 @@ func query(query string) map[string] *sContainerAlert {
 	}
 
 	//fmt.Printf("%#v.\n",res[0]);
-
+	
 	for index := 0; index < len(res[0].Series); index++ {
 		se := res[0].Series[index]
 
 //se.tags.container_uuid
 
 
-		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; !ok {
+		if _, ok := containerStatsInfo[alertId][se.Tags["container_uuid"]]; !ok {
 
-			containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
-			containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = false
+			containerStatsInfo[alertId][se.Tags["container_uuid"]] = new(sContainerAlert)
+			containerStatsInfo[alertId][se.Tags["container_uuid"]].TriggeredAlerts = false
 
 		}
-		containerStatsInfo[se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
-		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-cpu"
+		containerStatsInfo[alertId][se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
+		containerStatsInfo[alertId][se.Tags["container_uuid"]].Type = "container-cpu"
 		for i, row := range se.Values {
 			t, err := time.Parse(time.RFC3339, row[0].(string))
 			if err != nil {
@@ -81,10 +81,10 @@ func query(query string) map[string] *sContainerAlert {
 			sinfo.value = valStr
 			sinfo.timestamp = timeStr
 
-			containerStatsInfo[se.Tags["container_uuid"]].Stats = append(containerStatsInfo[se.Tags["container_uuid"]].Stats, sinfo)
+			containerStatsInfo[alertId][se.Tags["container_uuid"]].Stats = append(containerStatsInfo[alertId][se.Tags["container_uuid"]].Stats, sinfo)
 			//containerStatsInfo[se.Name].Stats[i].value = valStr
 			//containerStatsInfo[se.Name].Stats[i].timestamp = timeStr
-			containerStatsInfo[se.Tags["container_uuid"]].Timestamp = timeStr
+			containerStatsInfo[alertId][se.Tags["container_uuid"]].Timestamp = timeStr
 			if os.Getenv("DEBUG") == "true" {
 				log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
 			}
@@ -94,7 +94,7 @@ func query(query string) map[string] *sContainerAlert {
 	}
 	
 	//fmt.Printf("%#v.\n",containerStatsInfo);
-	return containerStatsInfo
+	return containerStatsInfo[alertId]
 }
 
 var con *client.Client

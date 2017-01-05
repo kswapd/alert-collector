@@ -58,6 +58,11 @@ func (alert *Alert) Run() {
 		fmt.Println("Query: ", fmt.Sprintf("%s limit %d", alert.Query, alert.Limit))
 	}
 
+
+	if _, ok := containerStatsInfo[alert.Name]; !ok {
+		containerStatsInfo[alert.Name] = make(map[string] *sContainerAlert)
+	}
+
 	groupByQuery := ""
 	if len(alert.GroupBy) > 0 {
 		groupByQuery = fmt.Sprintf("GROUP BY %s", alert.GroupBy)
@@ -66,7 +71,7 @@ func (alert *Alert) Run() {
 		alert.Query, alert.Timeshift, groupByQuery, alert.Limit)
 
 	fmt.Println(finalQuery)
-	infos := query(finalQuery)
+	infos := query(finalQuery, alert.Name)
 
 	infos = alert.ApplyFunction(infos)
 
