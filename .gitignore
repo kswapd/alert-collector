@@ -1,3 +1,4 @@
 .tmp/
 alert-collector
+.idea/
 .DS_Store

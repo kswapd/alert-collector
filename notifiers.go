@@ -41,15 +41,17 @@ const METHOD_POST = "POST"
 var alertUrl = "http://54.222.160.114:8082/alert/v1/info/receive"
 
 type AlertData struct {
-	alertData []AlertInfoJson `json:"alert_data"`
+	AlertInfo []AlertInfoJson `json:"alert_data"`
 }
 
 func (this *Notifier) sendAlert(alertData AlertData) {
+	fmt.Printf("the alert data is %+v\n", alertData)
 	sendBody, errParse := json.Marshal(alertData)
 	if errParse != nil {
 		log.Fatalln("Parse the alertdata error..")
 		return
 	}
+	fmt.Printf("the string is %s\n", string(sendBody))
 	req, err := http.NewRequest(METHOD_POST, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
 		log.Fatalln("http post err", err)

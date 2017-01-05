@@ -136,7 +136,7 @@ func (alert *Alert) Run() {
 				alert.EndTime   = info.AlertStartTime
 				alert.Namespace  = "namespace123"
 				alert.Data = append(alert.Data, param)
-				allAlert.alertData = append(allAlert.alertData, alert)
+				allAlert.AlertInfo = append(allAlert.AlertInfo, alert)
 
 				//sendAlert()
 			}
@@ -159,7 +159,7 @@ func (alert *Alert) Run() {
 
 	}
 
-	if len(allAlert.alertData) > 0 {
+	if len(allAlert.AlertInfo) > 0 {
 		for _, n := range alert.Notifiers {
 						n.sendAlert(allAlert)
 		}
