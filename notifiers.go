@@ -38,7 +38,7 @@ type AlertInfoJson struct {
 
 const METHOD_POST = "POST"
 
-var alertUrl = ""
+var alertUrl = "http://54.222.160.114:8082/alert/v1/info/receive"
 
 type AlertData struct {
 	alertData []AlertInfoJson `json:"alert_data"`
