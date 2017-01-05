@@ -52,23 +52,23 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 	}
 	req, err := http.NewRequest(method, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
-		return nil, err
+		log.Fatalln("http post err", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		log.Fatalln("http post err", err)
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		log.Fatalln("read response body error", err)
 	}
 	fmt.Println("the data is %v", string(data))
 	defer resp.Body.Close()
 }
 
-func (this *Notifier) Run(msg string, isNotifier bool){
+func (this *Notifier) Run(msg string, isNotifier bool) {
 	fmt.Println("the alert msg run is %s", msg)
 }
 
