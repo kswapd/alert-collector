@@ -36,7 +36,7 @@ type AlertInfoJson struct {
 	Data          []ParamJson `json:"data"`
 }
 
-const method = "POST"
+const METHOD_POST = "POST"
 
 var alertUrl = ""
 
@@ -50,7 +50,7 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		log.Fatalln("Parse the alertdata error..")
 		return
 	}
-	req, err := http.NewRequest(method, alertUrl, bytes.NewReader(sendBody))
+	req, err := http.NewRequest(METHOD_POST, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
 		log.Fatalln("http post err", err)
 	}

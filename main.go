@@ -25,7 +25,7 @@ import (
 
 type Trigger struct {
 	Operator string
-	Value    int64
+	Value    float64
 }
 
 type Notifier struct {
@@ -52,15 +52,14 @@ type Alert struct {
 	Notifiers    []Notifier `yaml:"-"`
 }
 
-var httpClient http.Client
-
 var (
-	tMutex                sync.Mutex
-	triggeredAlerts       = map[string]TriggeredAlert{}
+	tMutex sync.Mutex
+	triggeredAlerts = map[string]TriggeredAlert{}
+	httpClient http.Client
+	alertRule []Alert
 )
 
 var (
-	
 	alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
 	influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
 )
@@ -85,6 +84,7 @@ func main() {
 	}
 
 	setupHttpClient()
+	getRules()
 
 	done := make(chan bool)
 	for _, alert := range alerts {
