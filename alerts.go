@@ -11,7 +11,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func (alert *Alert) ApplyFunction(orginValue map[string] *sContainerAlert) map[string] *sContainerAlert {
+func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[string]*sContainerAlert {
 	var appliedFunction float64
 
 	for _, info := range orginValue {
@@ -58,9 +58,8 @@ func (alert *Alert) Run() {
 		fmt.Println("Query: ", fmt.Sprintf("%s limit %d", alert.Query, alert.Limit))
 	}
 
-
 	if _, ok := containerStatsInfo[alert.Name]; !ok {
-		containerStatsInfo[alert.Name] = make(map[string] *sContainerAlert)
+		containerStatsInfo[alert.Name] = make(map[string]*sContainerAlert)
 	}
 
 	groupByQuery := ""
@@ -83,7 +82,6 @@ func (alert *Alert) Run() {
 
 	for uuid, info := range infos {
 
-
 		alert_triggered := false
 		switch alert.Trigger.Operator {
 		case "GT":
@@ -95,7 +93,6 @@ func (alert *Alert) Run() {
 		case "LTE":
 			alert_triggered = info.TargetValue <= float64(alert.Trigger.Value)
 		}
-		
 
 		if alert_triggered {
 			message := fmt.Sprintf("*[!] %s--%s triggered!* Value: %.2f | Trigger: %s %.2f",
@@ -116,26 +113,24 @@ func (alert *Alert) Run() {
 					n.Run(message, true)
 				}*/
 				tagQuery := fmt.Sprintf("select * from container_cpu_usage_seconds_total where container_uuid='%s' order by time desc limit 1", uuid)
-				 queryTags(tagQuery, alert.Name)
-
+				queryTags(tagQuery, alert.Name)
 
 				var param ParamJson
 				param.PKey = "cpu"
-				param.PValue = fmt.Sprintf("%.2f",info.TargetValue)
-				
+				param.PValue = fmt.Sprintf("%.2f", info.TargetValue)
 
-				var alert AlertInfoJson 
-				alert.Status  = "alert" 
-				alert.AlertType  = "M"
-				alert.AlertDim  = "C"
-				alert.AppType   = "container"
-				alert.Msg    = "alerted"
+				var alert AlertInfoJson
+				alert.Status = "alert"
+				alert.AlertType = "M"
+				alert.AlertDim = "C"
+				alert.AppType = "container"
+				alert.Msg = "alerted"
 				alert.EnvironmentId = info.EnvironmentId
-				alert.ContainerUuid  = uuid
-				alert.ContainerName =  info.ContainerName
-				alert.StartTime  =  info.AlertStartTime
-				alert.EndTime   = info.AlertStartTime
-				alert.Namespace  = info.Namespace
+				alert.ContainerUuid = uuid
+				alert.ContainerName = info.ContainerName
+				alert.StartTime = info.AlertStartTime
+				alert.EndTime = info.AlertStartTime
+				alert.Namespace = info.Namespace
 				alert.Data = append(alert.Data, param)
 				allAlert.AlertInfo = append(allAlert.AlertInfo, alert)
 
@@ -147,7 +142,7 @@ func (alert *Alert) Run() {
 			if info.TriggeredAlerts {
 				info.TriggeredAlerts = false
 				//message := fmt.Sprintf("*[+] %s--%s resolved * Value: %.2f | Trigger: %s %.2f",
-					//alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
+				//alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
 				/*for _, n := range alert.Notifiers {
 					n.Run(message, false)
 				}*/
@@ -157,15 +152,12 @@ func (alert *Alert) Run() {
 			//color.Green(fmt.Sprintf("[+] %s--%s passed. (%.2f)", alert.Name,uuid, info.TargetValue))
 		}
 
-
 	}
 
 	if len(allAlert.AlertInfo) > 0 {
 		for _, n := range alert.Notifiers {
-						n.sendAlert(allAlert)
+			n.sendAlert(allAlert)
 		}
 	}
-
-
 
 }
