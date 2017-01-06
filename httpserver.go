@@ -10,16 +10,6 @@ import (
 	//"math"
 )
 
-const container_cpu = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const container_memory = `select value from "container_memory_usage_bytes"`
-const container_network_tx = `select derivative(value,1s) from "container_network_transmit_bytes_total"`
-const container_network_rx = `select derivative(value,1s) from "container_network_receive_bytes_total"`
-const container_disk = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const mysql_connection = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const redis_hits = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const redis_memory = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const nginx_accept = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-
 var (
 	listenPort, _ = strconv.Atoi(getEnv("LISTEN_PORT", "8011"))
 	ruleUrl = getEnv("RULE_URL", "http://127.0.0.1:8077/alert/v1/rule")
@@ -95,27 +85,6 @@ func getRules() {
 		} else {
 			_alert.Trigger.Value  = conMetrics.Value
 		}
-
-		//switch conMetrics.Key {
-		//case "cpu":
-		//	_alert.Query = container_cpu
-		//	_alert.Trigger.Value = conMetrics.Value
-		//case "memory":
-		//	_alert.Query = container_memory
-		//	_alert.Trigger.Value = 1<<32 - 1
-		//	_alert.Function = "max"							//memory use max value
-		//case "disk":
-		//	_alert.Query = container_disk
-		//	_alert.Trigger.Value = conMetrics.Value
-		//case "network_tx":
-		//	_alert.Query = container_network_tx
-		//	_alert.Trigger.Value = conMetrics.Value*1000000 //received is 2, means 2MB
-		//case "network_rx":
-		//	_alert.Query = container_network_rx
-		//	_alert.Trigger.Value = conMetrics.Value*1000000
-		//default:
-		//	log.Fatalln("no container metrics match....")
-		//}
 		_alert.Type = "influxdb"
 		_alert.Trigger.Operator = conMetrics.Condition
 
@@ -134,19 +103,6 @@ func getRules() {
 			_appAlert.Interval = 60
 			_appAlert.Limit = 500
 			_appAlert.Timeshift = "10m"
-
-			//switch expr := appJson.AppType + "_" + appMetrics.Key; expr{
-			//case "mysql_connection":
-			//	_appAlert.Query = mysql_connection
-			//case "redis_hits":
-			//	_appAlert.Query = redis_hits
-			//case "redis_memory":
-			//	_appAlert.Query = redis_memory
-			//case "nginx_accept":
-			//	_appAlert.Query = nginx_accept
-			//default:
-			//	log.Fatalln("no app metrics match...")
-			//}
 			_appAlert.Type = "influxdb"
 			_appAlert.Trigger.Operator = appMetrics.Condition
 			_appAlert.Trigger.Value = appMetrics.Value
