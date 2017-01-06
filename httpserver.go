@@ -22,13 +22,15 @@ const nginx_accept = `select difference(value)/elapsed(value) from "container_cp
 
 var (
 	listenPort, _ = strconv.Atoi(getEnv("LISTEN_PORT", "8011"))
-	ruleUrl = getEnv("RULE_URL", "http://54.222.160.114:8082/alert/v1/rule")
+	ruleUrl = getEnv("RULE_URL", "http://127.0.0.1:8077/alert/v1/rule")
 )
 
 type MetricsJson struct {
-	Key       string `json:"key"`
-	Condition string `json:"condition"`
-	Value     float64 `json:"value"`
+	Key        string `json:"key"`
+	Condition  string `json:"condition"`
+	Value      float64 `json:"value"`
+	QueryRaw   string `json:"queryRaw"`
+	RuleStatus string `json:"ruleStatus"`
 }
 
 type RuleJson struct {
@@ -77,6 +79,9 @@ func getRules() {
 	}
 	alertRule = alertRule[:0]
 	for _, conMetrics := range ruleJson.Container {
+		if conMetrics.RuleStatus == "0" {
+			continue
+		}
 		var _alert Alert
 		_alert.Name = "container_" + conMetrics.Key
 		_alert.Function = "average"
@@ -84,53 +89,64 @@ func getRules() {
 		_alert.Interval = 60
 		_alert.Limit = 500
 		_alert.Timeshift = "10m"
-		switch conMetrics.Key {
-		case "cpu":
-			_alert.Query = container_cpu
-			_alert.Trigger.Value = conMetrics.Value
-		case "memory":
-			_alert.Query = container_memory
-			_alert.Trigger.Value = 1<<32 - 1
-			_alert.Function = "max"							//memory use max value
-		case "disk":
-			_alert.Query = container_disk
-			_alert.Trigger.Value = conMetrics.Value
-		case "network_tx":
-			_alert.Query = container_network_tx
-			_alert.Trigger.Value = conMetrics.Value*1000000 //received is 2, means 2MB
-		case "network_rx":
-			_alert.Query = container_network_rx
-			_alert.Trigger.Value = conMetrics.Value*1000000
-		default:
-			log.Fatalln("no container metrics match....")
+		_alert.Query = conMetrics.QueryRaw
+		if conMetrics.Key == "network_tx" || conMetrics.Key == "network_rx" {
+			_alert.Trigger.Value = conMetrics.Value * 1000000
+		} else {
+			_alert.Trigger.Value  = conMetrics.Value
 		}
+
+		//switch conMetrics.Key {
+		//case "cpu":
+		//	_alert.Query = container_cpu
+		//	_alert.Trigger.Value = conMetrics.Value
+		//case "memory":
+		//	_alert.Query = container_memory
+		//	_alert.Trigger.Value = 1<<32 - 1
+		//	_alert.Function = "max"							//memory use max value
+		//case "disk":
+		//	_alert.Query = container_disk
+		//	_alert.Trigger.Value = conMetrics.Value
+		//case "network_tx":
+		//	_alert.Query = container_network_tx
+		//	_alert.Trigger.Value = conMetrics.Value*1000000 //received is 2, means 2MB
+		//case "network_rx":
+		//	_alert.Query = container_network_rx
+		//	_alert.Trigger.Value = conMetrics.Value*1000000
+		//default:
+		//	log.Fatalln("no container metrics match....")
+		//}
 		_alert.Type = "influxdb"
 		_alert.Trigger.Operator = conMetrics.Condition
-		
+
 		_alert.NotifiersRaw = []string{"sendAlert"}
 		alertRule = append(alertRule, _alert)
 	}
 	for _, appJson := range ruleJson.App {
-		var _appAlert Alert
 		for _, appMetrics := range appJson.AppParam {
+			if appMetrics.RuleStatus == "0" {
+				continue
+			}
+			var _appAlert Alert
 			_appAlert.Name = appJson.AppType + "_" + appMetrics.Key
 			_appAlert.Function = "average"
 			_appAlert.GroupBy = "container_uuid"
 			_appAlert.Interval = 60
 			_appAlert.Limit = 500
 			_appAlert.Timeshift = "10m"
-			switch expr := appJson.AppType + "_" + appMetrics.Key; expr{
-			case "mysql_connection":
-				_appAlert.Query = mysql_connection
-			case "redis_hits":
-				_appAlert.Query = redis_hits
-			case "redis_memory":
-				_appAlert.Query = redis_memory
-			case "nginx_accept":
-				_appAlert.Query = nginx_accept
-			default:
-				log.Fatalln("no app metrics match...")
-			}
+
+			//switch expr := appJson.AppType + "_" + appMetrics.Key; expr{
+			//case "mysql_connection":
+			//	_appAlert.Query = mysql_connection
+			//case "redis_hits":
+			//	_appAlert.Query = redis_hits
+			//case "redis_memory":
+			//	_appAlert.Query = redis_memory
+			//case "nginx_accept":
+			//	_appAlert.Query = nginx_accept
+			//default:
+			//	log.Fatalln("no app metrics match...")
+			//}
 			_appAlert.Type = "influxdb"
 			_appAlert.Trigger.Operator = appMetrics.Condition
 			_appAlert.Trigger.Value = appMetrics.Value
@@ -138,7 +154,6 @@ func getRules() {
 			alertRule = append(alertRule, _appAlert)
 		}
 	}
-	log.Println("get rules complete..")
 }
 
 
