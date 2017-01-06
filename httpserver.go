@@ -20,7 +20,7 @@ const container_network_rx = `select derivative(value,1s) from "container_networ
 //const redis_memory = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
 //const nginx_accept = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
 
-
+//http://54.223.149.108:8077
 var (
 	listenPort, _ = strconv.Atoi(getEnv("LISTEN_PORT", "8011"))
 	ruleUrl = getEnv("RULE_URL", "http://127.0.0.1:8077/alert/v1/rule")

@@ -103,14 +103,25 @@ func queryDiskUsage(query string, containerStatsInfo map[string] *sContainerAler
 
 		valInd := indexOf(res[0].Series[0].Columns, "value")
 		timeInd := indexOf(res[0].Series[0].Columns, "time")
-		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; !ok {
+		
 
-			containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
-			containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = false
-
+		var alerts = false
+		var stime string 
+		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; ok {
+				alerts = containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts
+				stime = containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime
 		}
+
+
+		containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
+		containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = alerts
+		containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime = stime
+		containerStatsInfo[se.Tags["container_uuid"]].AlertMessage = "alert message"
+
+
+
 		containerStatsInfo[se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
-		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-cpu"
+		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-disk"
 		for i, row := range se.Values {
 			t, err := time.Parse(time.RFC3339, row[timeInd].(string))
 			if err != nil {
@@ -136,7 +147,7 @@ func queryDiskUsage(query string, containerStatsInfo map[string] *sContainerAler
 			if strings.Contains(se.Name, "container_filesystem_capacity_") {
 				sinfo.filename = strings.TrimPrefix(se.Name, "container_filesystem_capacity_")
 				sinfo.limit = valStr
-
+				containerStatsInfo[se.Tags["container_uuid"]].AlertMessage = sinfo.filename
 				for i, v := range containerStatsInfo[se.Tags["container_uuid"]].Stats {
 					if v.filename == sinfo.filename && v.timestamp == sinfo.timestamp{
 					   fsIndex = i
@@ -180,6 +191,7 @@ func queryDiskUsage(query string, containerStatsInfo map[string] *sContainerAler
 			//containerStatsInfo[se.Name].Stats[i].value = valStr
 			//containerStatsInfo[se.Name].Stats[i].timestamp = timeStr
 			containerStatsInfo[se.Tags["container_uuid"]].Timestamp = timeStr
+			containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime = timeStr
 			if os.Getenv("DEBUG") == "true" {
 				log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
 			}
@@ -219,15 +231,19 @@ func query(query string, containerStatsInfo map[string] *sContainerAlert)  map[s
 		se := res[0].Series[index]
 
 //se.tags.container_uuid
-
-
-		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; !ok {
-
-			containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
-			containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = false
-			containerStatsInfo[se.Tags["container_uuid"]].AlertMessage = "alert message"
-
+		var alerts = false
+		var stime string  
+		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; ok {
+				alerts = containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts
+				stime = containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime
 		}
+
+
+		containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
+		containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = alerts
+		containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime = stime
+		containerStatsInfo[se.Tags["container_uuid"]].AlertMessage = "alert message"
+
 		containerStatsInfo[se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
 		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-cpu"
 		for i, row := range se.Values {
@@ -256,6 +272,7 @@ func query(query string, containerStatsInfo map[string] *sContainerAlert)  map[s
 			//containerStatsInfo[se.Name].Stats[i].value = valStr
 			//containerStatsInfo[se.Name].Stats[i].timestamp = timeStr
 			containerStatsInfo[se.Tags["container_uuid"]].Timestamp = timeStr
+			containerStatsInfo[se.Tags["container_uuid"]].AlertStartTime = timeStr
 			if os.Getenv("DEBUG") == "true" {
 				log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
 			}

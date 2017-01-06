@@ -19,7 +19,11 @@ func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[st
 
 		if strings.Contains(alert.Name, "disk") {
 			for i, _ := range info.Stats {
-					info.Stats[i].value = info.Stats[i].value/info.Stats[i].limit
+					if info.Stats[i].limit > 0{
+						info.Stats[i].value = info.Stats[i].value/info.Stats[i].limit
+					}else{
+						info.Stats[i].value = 0.0
+					}
 				}
 		}
 		if len(info.Stats) > 0 {
