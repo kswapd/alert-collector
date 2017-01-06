@@ -11,8 +11,8 @@ import (
 
 const container_cpu = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
 const container_memory = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const container_network_tx = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const container_network_rx = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
+const container_network_tx = `select derivative(value,1s) from "container_network_transmit_bytes_total"`
+const container_network_rx = `select derivative(value,1s) from "container_network_receive_bytes_total"`
 const container_disk = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
 const mysql_connection = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
 const redis_hits = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
@@ -86,20 +86,25 @@ func getRules() {
 		switch conMetrics.Key {
 		case "cpu":
 			_alert.Query = container_cpu
+			_alert.Trigger.Value = conMetrics.Value
 		case "memory":
 			_alert.Query = container_memory
+			_alert.Trigger.Value = conMetrics.Value
 		case "disk":
 			_alert.Query = container_disk
+			_alert.Trigger.Value = conMetrics.Value
 		case "network_tx":
 			_alert.Query = container_network_tx
+			_alert.Trigger.Value = conMetrics.Value
 		case "network_rx":
 			_alert.Query = container_network_rx
+			_alert.Trigger.Value = conMetrics.Value
 		default:
 			log.Fatalln("no container metrics match....")
 		}
 		_alert.Type = "influxdb"
 		_alert.Trigger.Operator = conMetrics.Condition
-		_alert.Trigger.Value = conMetrics.Value
+		
 		_alert.NotifiersRaw = []string{"sendAlert"}
 		alertRule = append(alertRule, _alert)
 	}

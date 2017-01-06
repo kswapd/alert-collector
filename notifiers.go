@@ -49,8 +49,8 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		log.Fatalln("Parse the alertdata error..")
 		return
 	}
-	
-	fmt.Printf("the string is %s\n", string(sendBody))
+
+	//fmt.Printf("the string is %s\n", string(sendBody))
 	client := &http.Client{}
 
 	req, err := http.NewRequest(METHOD_POST, alertUrl, bytes.NewReader(sendBody))

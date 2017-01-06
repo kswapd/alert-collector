@@ -60,7 +60,7 @@ func (alert *Alert) Run() {
 	}
 
 
-	fmt.Println(alert.Name)
+	//fmt.Println(alert.Name)
 
 
 	groupByQuery := ""
@@ -70,7 +70,7 @@ func (alert *Alert) Run() {
 	finalQuery := fmt.Sprintf("%s where time > now() - %s %s limit %d",
 		alert.Query, alert.Timeshift, groupByQuery, alert.Limit)
 
-	fmt.Println(finalQuery)
+	//fmt.Println(finalQuery)
 
 	infos := query(finalQuery, alert.containerStatsInfo)
 
