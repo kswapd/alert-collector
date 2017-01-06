@@ -68,7 +68,7 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		log.Fatalln("read response body error", err)
 	}
 
-	_=data
+	_ = data
 	//fmt.Printf("the data is %s.\n", string(data))
 	defer resp.Body.Close()
 }
