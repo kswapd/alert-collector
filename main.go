@@ -50,6 +50,7 @@ type Alert struct {
 	Trigger      Trigger
 	NotifiersRaw []string   `yaml:"notifiers"`
 	Notifiers    []Notifier `yaml:"-"`
+	containerStatsInfo map[string] *sContainerAlert
 }
 
 var (
@@ -62,7 +63,7 @@ var (
 var (
 	alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
 	influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
-	containerStatsInfo = make(map[string]map[string] *sContainerAlert)
+	//containerStatsInfo = make(map[string]map[string] *sContainerAlert)
 )
 
 func main() {

@@ -43,14 +43,16 @@ type AlertData struct {
 }
 
 func (this *Notifier) sendAlert(alertData AlertData) {
-	fmt.Printf("the alert data is %+v\n", alertData)
+	//fmt.Printf("the alert data is %+v\n", alertData)
 	sendBody, errParse := json.Marshal(alertData)
 	if errParse != nil {
 		log.Fatalln("Parse the alertdata error..")
 		return
 	}
+	
 	fmt.Printf("the string is %s\n", string(sendBody))
 	client := &http.Client{}
+
 	req, err := http.NewRequest(METHOD_POST, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
 		log.Fatalln("http post err", err)
@@ -65,7 +67,9 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 	if err != nil {
 		log.Fatalln("read response body error", err)
 	}
-	fmt.Printf("the data is %s.\n", string(data))
+
+	_=data
+	//fmt.Printf("the data is %s.\n", string(data))
 	defer resp.Body.Close()
 }
 

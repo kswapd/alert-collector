@@ -35,7 +35,7 @@ func indexOf(strs []string, dst string) int {
 	}
 	return -1 //未找到dst，返回-1
 }
-func queryTags(query string, alertId string) map[string] *sContainerAlert {
+func queryTags(query string, containerStatsInfo map[string] *sContainerAlert) map[string] *sContainerAlert {
 	
 	res, err := queryDB(query)
 	if err != nil {
@@ -66,16 +66,16 @@ func queryTags(query string, alertId string) map[string] *sContainerAlert {
 		Type := fmt.Sprintf("%s", res[0].Series[0].Values[0][typeInd])
 
 
-		containerStatsInfo[alertId][Container_uuid].EnvironmentId = Environment_id
-		containerStatsInfo[alertId][Container_uuid].ContainerName = Container_name
-		containerStatsInfo[alertId][Container_uuid].Namespace = Namespace
-		containerStatsInfo[alertId][Container_uuid].Type = Type
+		containerStatsInfo[Container_uuid].EnvironmentId = Environment_id
+		containerStatsInfo[Container_uuid].ContainerName = Container_name
+		containerStatsInfo[Container_uuid].Namespace = Namespace
+		containerStatsInfo[Container_uuid].Type = Type
 
-	return containerStatsInfo[alertId]
+	return containerStatsInfo
 }
 
 
-func query(query string, alertId string) map[string] *sContainerAlert {
+func query(query string, containerStatsInfo map[string] *sContainerAlert)  map[string] *sContainerAlert {
 	ret := []float64{}
 
 	//containerInfo := 
@@ -101,14 +101,14 @@ func query(query string, alertId string) map[string] *sContainerAlert {
 //se.tags.container_uuid
 
 
-		if _, ok := containerStatsInfo[alertId][se.Tags["container_uuid"]]; !ok {
+		if _, ok := containerStatsInfo[se.Tags["container_uuid"]]; !ok {
 
-			containerStatsInfo[alertId][se.Tags["container_uuid"]] = new(sContainerAlert)
-			containerStatsInfo[alertId][se.Tags["container_uuid"]].TriggeredAlerts = false
+			containerStatsInfo[se.Tags["container_uuid"]] = new(sContainerAlert)
+			containerStatsInfo[se.Tags["container_uuid"]].TriggeredAlerts = false
 
 		}
-		containerStatsInfo[alertId][se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
-		containerStatsInfo[alertId][se.Tags["container_uuid"]].Type = "container-cpu"
+		containerStatsInfo[se.Tags["container_uuid"]].ContainerUuid = se.Tags["container_uuid"]
+		containerStatsInfo[se.Tags["container_uuid"]].Type = "container-cpu"
 		for i, row := range se.Values {
 			t, err := time.Parse(time.RFC3339, row[0].(string))
 			if err != nil {
@@ -131,10 +131,10 @@ func query(query string, alertId string) map[string] *sContainerAlert {
 			sinfo.value = valStr
 			sinfo.timestamp = timeStr
 
-			containerStatsInfo[alertId][se.Tags["container_uuid"]].Stats = append(containerStatsInfo[alertId][se.Tags["container_uuid"]].Stats, sinfo)
+			containerStatsInfo[se.Tags["container_uuid"]].Stats = append(containerStatsInfo[se.Tags["container_uuid"]].Stats, sinfo)
 			//containerStatsInfo[se.Name].Stats[i].value = valStr
 			//containerStatsInfo[se.Name].Stats[i].timestamp = timeStr
-			containerStatsInfo[alertId][se.Tags["container_uuid"]].Timestamp = timeStr
+			containerStatsInfo[se.Tags["container_uuid"]].Timestamp = timeStr
 			if os.Getenv("DEBUG") == "true" {
 				log.Printf("[%2d] %s: %d\n", i, t.Format(time.Stamp), val)
 			}
@@ -144,7 +144,7 @@ func query(query string, alertId string) map[string] *sContainerAlert {
 	}
 	
 	//fmt.Printf("%#v.\n",containerStatsInfo);
-	return containerStatsInfo[alertId]
+	return containerStatsInfo
 }
 
 var con *client.Client

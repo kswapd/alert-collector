@@ -50,6 +50,7 @@ func (alert *Alert) Setup() {
 	for _, n := range alert.NotifiersRaw {
 		alert.Notifiers = append(alert.Notifiers, Notifier{Name: n})
 	}
+	alert.containerStatsInfo = make(map[string] *sContainerAlert)
 
 }
 
@@ -58,9 +59,9 @@ func (alert *Alert) Run() {
 		fmt.Println("Query: ", fmt.Sprintf("%s limit %d", alert.Query, alert.Limit))
 	}
 
-	if _, ok := containerStatsInfo[alert.Name]; !ok {
-		containerStatsInfo[alert.Name] = make(map[string]*sContainerAlert)
-	}
+
+	fmt.Println(alert.Name)
+
 
 	groupByQuery := ""
 	if len(alert.GroupBy) > 0 {
@@ -70,7 +71,8 @@ func (alert *Alert) Run() {
 		alert.Query, alert.Timeshift, groupByQuery, alert.Limit)
 
 	fmt.Println(finalQuery)
-	infos := query(finalQuery, alert.Name)
+
+	infos := query(finalQuery, alert.containerStatsInfo)
 
 	infos = alert.ApplyFunction(infos)
 
@@ -113,7 +115,9 @@ func (alert *Alert) Run() {
 					n.Run(message, true)
 				}*/
 				tagQuery := fmt.Sprintf("select * from container_cpu_usage_seconds_total where container_uuid='%s' order by time desc limit 1", uuid)
-				queryTags(tagQuery, alert.Name)
+
+				 queryTags(tagQuery, alert.containerStatsInfo)
+
 
 				var param ParamJson
 				param.PKey = "cpu"
