@@ -49,7 +49,7 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		log.Fatalln("Parse the alertdata error..")
 		return
 	}
-	
+
 	fmt.Printf("the string is %s\n", string(sendBody))
 	client := &http.Client{}
 
@@ -68,7 +68,7 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		log.Fatalln("read response body error", err)
 	}
 
-	_=data
+	_ = data
 	//fmt.Printf("the data is %s.\n", string(data))
 	defer resp.Body.Close()
 }
