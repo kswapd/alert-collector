@@ -61,8 +61,9 @@ var (
 )
 
 var (
-	alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
-	influxAddr = flag.String("influx_addr", "54.223.73.138:8086", "host:port")
+	//alertFile = flag.String("config_file", "example.yml", "Config alert file to use")
+	//alertFile = getEnv("config_file", "http://54.223.149.108:8077/alert/v1/info/receive")
+	influxAddr = getEnv("INFLUX_ADDR", "54.223.73.138:8086")
 	//containerStatsInfo = make(map[string]map[string] *sContainerAlert)
 )
 
@@ -70,7 +71,7 @@ func main() {
 	//var file *string = flag.StringP("config", "c", "", "Config file to use")
 
 	flag.Parse()
-	fmt.Printf("alert file:%s, influx address:%s\n", *alertFile, *influxAddr)
+	fmt.Printf("get influx address:%s\n", influxAddr)
 	setupInflux()
 
 	alerts := []Alert{}

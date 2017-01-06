@@ -4,6 +4,7 @@ type sStatsInfo struct {
           timestamp string `json:"timestamp"`
           value float64 `json:"value"`
           limit float64 `json:"limit"`
+          filename string  `json:"filename"`
         }
 type sContainerAlert struct {
         Type  string `json:"type"`
@@ -19,6 +20,7 @@ type sContainerAlert struct {
         TriggeredAlerts bool `json:"triggerd_alerts"`
         AlertStartTime string 
         AlertEndTime string
+        AlertMessage string `json:"alert_message"`
         Stats []sStatsInfo  `json:"stats"`
         
      

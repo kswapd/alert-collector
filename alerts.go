@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math"
 	"os"
-	//"time"
-
+	"time"
+	"strings"
 	"github.com/fatih/color"
+	//"log"
 )
 
 func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[string]*sContainerAlert {
@@ -16,8 +17,13 @@ func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[st
 
 	for _, info := range orginValue {
 
+		if strings.Contains(alert.Name, "disk") {
+			for i, _ := range info.Stats {
+					info.Stats[i].value = info.Stats[i].value/info.Stats[i].limit
+				}
+		}
 		if len(info.Stats) > 0 {
-			appliedFunction = info.Stats[0].value
+				appliedFunction = info.Stats[0].value
 		}
 
 		if alert.Function == "average" {
@@ -55,6 +61,7 @@ func (alert *Alert) Setup() {
 }
 
 func (alert *Alert) Run() {
+	const RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
 	if os.Getenv("DEBUG") == "true" {
 		fmt.Println("Query: ", fmt.Sprintf("%s limit %d", alert.Query, alert.Limit))
 	}
@@ -62,7 +69,7 @@ func (alert *Alert) Run() {
 
 	//fmt.Println(alert.Name)
 
-
+	var infos map[string] *sContainerAlert
 	groupByQuery := ""
 	if len(alert.GroupBy) > 0 {
 		groupByQuery = fmt.Sprintf("GROUP BY %s", alert.GroupBy)
@@ -70,9 +77,12 @@ func (alert *Alert) Run() {
 	finalQuery := fmt.Sprintf("%s where time > now() - %s %s limit %d",
 		alert.Query, alert.Timeshift, groupByQuery, alert.Limit)
 
-	//fmt.Println(finalQuery)
-
-	infos := query(finalQuery, alert.containerStatsInfo)
+	fmt.Println(finalQuery)
+	if strings.Contains(alert.Name, "disk") {
+		infos = queryDiskUsage(finalQuery, alert.containerStatsInfo)
+	} else {
+		infos = query(finalQuery, alert.containerStatsInfo)
+	}
 
 	infos = alert.ApplyFunction(infos)
 
@@ -128,12 +138,25 @@ func (alert *Alert) Run() {
 				alert.AlertType = "M"
 				alert.AlertDim = "C"
 				alert.AppType = "container"
-				alert.Msg = "alerted"
+				alert.Msg = info.AlertMessage
 				alert.EnvironmentId = info.EnvironmentId
 				alert.ContainerUuid = uuid
 				alert.ContainerName = info.ContainerName
 				alert.StartTime = info.AlertStartTime
-				alert.EndTime = info.AlertStartTime
+				alert.EndTime = alert.StartTime
+				st, err := time.Parse(RFC3339Nano, alert.StartTime)
+				if err == nil {
+					//queryValidation = false
+					
+					st = st.Add(time.Second*5)
+					etStr := st.Format(RFC3339Nano)
+					alert.EndTime = etStr
+				}else{
+					fmt.Println("Error: "+info.AlertStartTime)
+				}
+				
+
+				
 				alert.Namespace = info.Namespace
 				alert.Data = append(alert.Data, param)
 				allAlert.AlertInfo = append(allAlert.AlertInfo, alert)

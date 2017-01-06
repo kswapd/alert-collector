@@ -9,6 +9,17 @@ import (
 	"encoding/json"
 	//"math"
 )
+/*
+const container_cpu = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`		//ok
+const container_memory = `select value from "container_memory_usage_bytes"`										//ok	
+const container_network_tx = `select derivative(value,1s) from "container_network_transmit_bytes_total"`		//ok
+const container_network_rx = `select derivative(value,1s) from "container_network_receive_bytes_total"`			//ok*/
+//const container_disk = `select *  from /.*container_filesystem_capacity_\/*|.*container_filesystem_usage_\/*/`		//todo
+//const mysql_connection = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`		
+//const redis_hits = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
+//const redis_memory = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
+//const nginx_accept = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
+
 
 var (
 	listenPort, _ = strconv.Atoi(getEnv("LISTEN_PORT", "8011"))
@@ -84,6 +95,7 @@ func getRules() {
 			_alert.Trigger.Value = conMetrics.Value * 1000000
 		} else {
 			_alert.Trigger.Value  = conMetrics.Value
+
 		}
 		_alert.Type = "influxdb"
 		_alert.Trigger.Operator = conMetrics.Condition
