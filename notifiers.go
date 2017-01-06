@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"os"
 	"net/http"
-	"net"
-	"time"
 	"encoding/json"
 	"log"
 	"bytes"
@@ -52,12 +50,13 @@ func (this *Notifier) sendAlert(alertData AlertData) {
 		return
 	}
 	fmt.Printf("the string is %s\n", string(sendBody))
+	client := &http.Client{}
 	req, err := http.NewRequest(METHOD_POST, alertUrl, bytes.NewReader(sendBody))
 	if err != nil {
 		log.Fatalln("http post err", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := httpClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalln("http post err", err)
 	}
@@ -76,7 +75,7 @@ func (this *Notifier) Run(msg string, isNotifier bool) {
 
 func setupHttpClient() {
 	alertUrl = getEnv("ALERT_URL", "http://54.223.149.108:8077/alert/v1/info/receive")
-	httpClient = http.Client{
+	/*httpClient = http.Client{
 		Transport: &http.Transport{
 			Dial: func(netw, addr string) (net.Conn, error) {
 				deadline := time.Now().Add(25 * time.Second)
@@ -88,7 +87,7 @@ func setupHttpClient() {
 				return c, nil
 			},
 		},
-	}
+	}*/
 }
 
 func getEnv(key string, fallback string) string {

@@ -131,6 +131,7 @@ func getRules() {
 			alertRule = append(alertRule, _appAlert)
 		}
 	}
+	log.Println("get rules complete..")
 }
 
 
