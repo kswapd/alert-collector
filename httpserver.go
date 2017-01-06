@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"encoding/json"
+	//"math"
 )
 
 const container_cpu = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
-const container_memory = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
+const container_memory = `select value from "container_memory_usage_bytes"`
 const container_network_tx = `select derivative(value,1s) from "container_network_transmit_bytes_total"`
 const container_network_rx = `select derivative(value,1s) from "container_network_receive_bytes_total"`
 const container_disk = `select difference(value)/elapsed(value) from "container_cpu_usage_seconds_total"`
@@ -89,16 +90,17 @@ func getRules() {
 			_alert.Trigger.Value = conMetrics.Value
 		case "memory":
 			_alert.Query = container_memory
-			_alert.Trigger.Value = conMetrics.Value
+			_alert.Trigger.Value = 1<<32 - 1
+			_alert.Function = "max"							//memory use max value
 		case "disk":
 			_alert.Query = container_disk
 			_alert.Trigger.Value = conMetrics.Value
 		case "network_tx":
 			_alert.Query = container_network_tx
-			_alert.Trigger.Value = conMetrics.Value
+			_alert.Trigger.Value = conMetrics.Value*1000000 //received is 2, means 2MB
 		case "network_rx":
 			_alert.Query = container_network_rx
-			_alert.Trigger.Value = conMetrics.Value
+			_alert.Trigger.Value = conMetrics.Value*1000000
 		default:
 			log.Fatalln("no container metrics match....")
 		}
