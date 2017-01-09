@@ -34,7 +34,16 @@ func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[st
 			for _, s := range info.Stats {
 				appliedFunction += float64(s.value)
 			}
-			appliedFunction = appliedFunction / float64(len(info.Stats))
+
+			if(len(info.Stats) < 1){
+
+				fmt.Println("err alert length")
+				fmt.Printf("%v.\n",info);
+				appliedFunction = 0.0
+
+			}else{
+				appliedFunction = appliedFunction / float64(len(info.Stats))
+			}
 			info.AvgValue = appliedFunction
 			info.TargetValue = appliedFunction
 		} else if alert.Function == "max" {
@@ -111,8 +120,8 @@ func (alert *Alert) Run() {
 		}
 
 		if alert_triggered {
-			message := fmt.Sprintf("*[!] %s--%s triggered!* Value: %.2f | Trigger: %s %.2f",
-				alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value)
+			message := fmt.Sprintf("*[!] %s--%s triggered!* Value: %.2f | Trigger: %s %.2f %s",
+				alert.Name, uuid, info.TargetValue, alert.Trigger.Operator, alert.Trigger.Value, info.AlertStartTime)
 			color.Red(message)
 			alertAlreadyTriggered := false
 			tMutex.Lock()
