@@ -114,7 +114,7 @@ func getRules() {
 			_appAlert.GroupBy = "container_uuid"
 			_appAlert.Interval = 60
 			_appAlert.Limit = 500
-			_appAlert.Timeshift = "10m"
+			_appAlert.Timeshift = "1m"
 			_appAlert.Type = "influxdb"
 			_appAlert.Trigger.Operator = appMetrics.Condition
 			_appAlert.Trigger.Value = appMetrics.Value

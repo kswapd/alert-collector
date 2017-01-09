@@ -14,9 +14,9 @@ import (
 
 func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[string]*sContainerAlert {
 	var appliedFunction float64
-
+	
 	for _, info := range orginValue {
-
+		appliedFunction = 0.0
 		if strings.Contains(alert.Name, "disk") {
 			for i, _ := range info.Stats {
 					if info.Stats[i].limit > 0{
@@ -28,12 +28,11 @@ func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[st
 		}
 		if len(info.Stats) > 0 {
 				appliedFunction = info.Stats[0].value
+				info.AlertStartTime = info.Stats[0].timestamp
 		}
 
 		if alert.Function == "average" {
-			for _, s := range info.Stats {
-				appliedFunction += float64(s.value)
-			}
+			
 
 			if(len(info.Stats) < 1){
 
@@ -42,6 +41,9 @@ func (alert *Alert) ApplyFunction(orginValue map[string]*sContainerAlert) map[st
 				appliedFunction = 0.0
 
 			}else{
+				for _, s := range info.Stats {
+					appliedFunction += float64(s.value)
+				}
 				appliedFunction = appliedFunction / float64(len(info.Stats))
 			}
 			info.AvgValue = appliedFunction
@@ -161,14 +163,14 @@ func (alert *Alert) Run() {
 				if err == nil {
 					//queryValidation = false
 					
-					st = st.Add(time.Second*30)
+					/*st = st.Add(time.Second*30)
+					etStr := st.Format(RFC3339Nano)
+					alert.EndTime = etStr*/
+
+
+					st = st.Add(time.Second*(120))
 					etStr := st.Format(RFC3339Nano)
 					alert.EndTime = etStr
-
-
-					st = st.Add(time.Second*(-60))
-					stStr := st.Format(RFC3339Nano)
-					alert.StartTime = stStr
 
 					//fmt.Println("stStr:"+stStr+"es:"+etStr)
 
