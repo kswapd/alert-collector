@@ -161,9 +161,18 @@ func (alert *Alert) Run() {
 				if err == nil {
 					//queryValidation = false
 					
-					st = st.Add(time.Second*5)
+					st = st.Add(time.Second*30)
 					etStr := st.Format(RFC3339Nano)
 					alert.EndTime = etStr
+
+
+					st = st.Add(time.Second*(-60))
+					stStr := st.Format(RFC3339Nano)
+					alert.StartTime = stStr
+
+					//fmt.Println("stStr:"+stStr+"es:"+etStr)
+
+
 				}else{
 					fmt.Println("Error: "+info.AlertStartTime)
 				}
