@@ -89,7 +89,7 @@ func getRules() {
 		_alert.GroupBy = "container_uuid"
 		_alert.Interval = 60
 		_alert.Limit = 500
-		_alert.Timeshift = "10m"
+		_alert.Timeshift = "1m"
 		_alert.Query = conMetrics.QueryRaw
 		if conMetrics.Key == "network_tx" || conMetrics.Key == "network_rx" {
 			_alert.Trigger.Value = conMetrics.Value * 1000000

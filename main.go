@@ -94,7 +94,10 @@ func main() {
 		go func(alert Alert) {
 			alert.Setup()
 			for {
+				startTime := time.Now()
 				alert.Run()
+				elapsed := time.Since(startTime)
+				fmt.Printf("%s cost %s.\n",alert.Name, elapsed)
 				time.Sleep(time.Duration(alert.Interval) * time.Second)
 			}
 		}(alert)
