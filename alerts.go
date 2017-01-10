@@ -132,7 +132,7 @@ func (alert *Alert) Run() {
 				alertAlreadyTriggered = true
 			} else {
 				info.TriggeredAlerts = true
-				info.AlertStartTime = info.Timestamp
+				//info.AlertStartTime = info.Timestamp
 			}
 			tMutex.Unlock()
 			if !alertAlreadyTriggered {
