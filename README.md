@@ -21,7 +21,7 @@ Go to releases, or download the latest here: [v0.1](https://github.com/joshrende
   * `value`: value to compare against (note all values are floats internally)
 * `notifiers`: an array of notifiers, possible options are slack and hipchat
 
-Example: ( see example.yml for more )
+Examples: ( see example.yml for more )
 
 ``` yml
 - name: Not Enough Foo
